@@ -1,0 +1,1 @@
+./client_smtp --servidor "172.20.0.21" --usuari "1457962" --remitent 1457962@campus.euss.org --destinatari 1457962@campus.euss.org --assumpte "Mail de prova" --text "Hola"
