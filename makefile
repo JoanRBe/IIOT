@@ -18,7 +18,7 @@ build/.deixarme:
 	touch build/.deixarme
 
 build: build/.deixarme
-	
+
 client_smtp: build build/client_smtp
 
 build/client_smtp: build src/client_smtp/main.c
