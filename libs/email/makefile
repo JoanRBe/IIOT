@@ -24,3 +24,6 @@ email.o: email.c
 
 clean:
 	rm -f *.o $(TARGET) $(LIBRARY)
+
+test:
+	LD_LIBRARY_PATH=. ./main -s "172.20.0.21" -o 1585504@campus.euss.org -d 1585504@campus.euss.org -t hola -f /home/pi/Desktop/IIOT/libs/email/textemail.txt

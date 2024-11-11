@@ -1,4 +1,6 @@
 #ifndef FUNC_H
 #define FUNC_H
-void email(char *arg1, char *arg2, char *arg3, char *arg4);
+
+void email(char *server_address, char *email_destinatari, char *email_remitent, char *tema_email, char *text_email);
+
 #endif

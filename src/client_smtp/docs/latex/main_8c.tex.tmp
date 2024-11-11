@@ -1,0 +1,80 @@
+\hypertarget{main_8c}{}\doxysection{main.\+c File Reference}
+\label{main_8c}\index{main.c@{main.c}}
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$sys/types.\+h$>$}\newline
+{\ttfamily \#include $<$sys/socket.\+h$>$}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include $<$netinet/in.\+h$>$}\newline
+{\ttfamily \#include $<$arpa/inet.\+h$>$}\newline
+{\ttfamily \#include $<$unistd.\+h$>$}\newline
+{\ttfamily \#include $<$getopt.\+h$>$}\newline
+Include dependency graph for main.\+c\+:
+% FIG 0
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{main_8c_a2cc017f996590b8f98e7f66df1a7c5f8}{REQUEST\+\_\+\+MSG\+\_\+\+SIZE}}~1024
+\item 
+\#define \mbox{\hyperlink{main_8c_a6fbf842b56475fc10d465b40b8c261c3}{REPLY\+\_\+\+MSG\+\_\+\+SIZE}}~1024
+\item 
+\#define \mbox{\hyperlink{main_8c_a59d9747d6831a539716650aac76cf21c}{SERVER\+\_\+\+PORT\+\_\+\+NUM}}~25
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{main_8c_a0ddf1224851353fc92bfbff6f499fa97}{main}} (int argc, char $\ast$argv\mbox{[}$\,$\mbox{]})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{main_8c_a6fbf842b56475fc10d465b40b8c261c3}\label{main_8c_a6fbf842b56475fc10d465b40b8c261c3}} 
+\index{main.c@{main.c}!REPLY\_MSG\_SIZE@{REPLY\_MSG\_SIZE}}
+\index{REPLY\_MSG\_SIZE@{REPLY\_MSG\_SIZE}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{REPLY\_MSG\_SIZE}{REPLY\_MSG\_SIZE}}
+{\footnotesize\ttfamily \#define REPLY\+\_\+\+MSG\+\_\+\+SIZE~1024}
+
+
+
+Definition at line \mbox{\hyperlink{main_8c_source_l00019}{19}} of file \mbox{\hyperlink{main_8c_source}{main.\+c}}.
+
+\mbox{\Hypertarget{main_8c_a2cc017f996590b8f98e7f66df1a7c5f8}\label{main_8c_a2cc017f996590b8f98e7f66df1a7c5f8}} 
+\index{main.c@{main.c}!REQUEST\_MSG\_SIZE@{REQUEST\_MSG\_SIZE}}
+\index{REQUEST\_MSG\_SIZE@{REQUEST\_MSG\_SIZE}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{REQUEST\_MSG\_SIZE}{REQUEST\_MSG\_SIZE}}
+{\footnotesize\ttfamily \#define REQUEST\+\_\+\+MSG\+\_\+\+SIZE~1024}
+
+
+
+Definition at line \mbox{\hyperlink{main_8c_source_l00018}{18}} of file \mbox{\hyperlink{main_8c_source}{main.\+c}}.
+
+\mbox{\Hypertarget{main_8c_a59d9747d6831a539716650aac76cf21c}\label{main_8c_a59d9747d6831a539716650aac76cf21c}} 
+\index{main.c@{main.c}!SERVER\_PORT\_NUM@{SERVER\_PORT\_NUM}}
+\index{SERVER\_PORT\_NUM@{SERVER\_PORT\_NUM}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{SERVER\_PORT\_NUM}{SERVER\_PORT\_NUM}}
+{\footnotesize\ttfamily \#define SERVER\+\_\+\+PORT\+\_\+\+NUM~25}
+
+
+
+Definition at line \mbox{\hyperlink{main_8c_source_l00020}{20}} of file \mbox{\hyperlink{main_8c_source}{main.\+c}}.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{main_8c_a0ddf1224851353fc92bfbff6f499fa97}\label{main_8c_a0ddf1224851353fc92bfbff6f499fa97}} 
+\index{main.c@{main.c}!main@{main}}
+\index{main@{main}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}\item[{int}]{argc,  }\item[{char $\ast$}]{argv\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})}
+
+TCPIPClient Parametrització en C Introducció de parámetres Construir l\textquotesingle{}adreça
+
+Posar l\textquotesingle{}estructura a zero.
+\begin{DoxyParams}{Parameters}
+{\em servidor} & variable per entrar ip servidor\\
+\hline
+\end{DoxyParams}
+
+
+Definition at line \mbox{\hyperlink{main_8c_source_l00030}{30}} of file \mbox{\hyperlink{main_8c_source}{main.\+c}}.
+

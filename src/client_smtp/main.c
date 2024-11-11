@@ -115,7 +115,7 @@ int main (int argc, char *argv[])
 
 	/*Construir l'adreça*/
 	sockAddrSize = sizeof(struct sockaddr_in);
-	bzero ((char *)&serverAddr, sockAddrSize); //Posar l'estructura a zero.
+	bzero ((char *)&serverAddr, sockAddrSize); /**Posar l'estructura a zero. @param servidor variable per entrar ip servidor*/
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons (SERVER_PORT_NUM);
 	serverAddr.sin_addr.s_addr = inet_addr(serverName);
