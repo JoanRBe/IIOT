@@ -17,7 +17,8 @@
 #define SERVER_PORT_NUM 25
 
 
-void email(char *server_address, char *email_destinatari, char *email_remitent, char *tema_email, char *text_email) {
+void email(char *server_address, char *email_destinatari, char *email_remitent, char *tema_email, char *text_email)
+{
     struct sockaddr_in serverAddr;
     char BufRead[REPLY_MSG_SIZE];
     char BufWrite[REPLY_MSG_SIZE];
@@ -26,8 +27,8 @@ void email(char *server_address, char *email_destinatari, char *email_remitent, 
     // Crear el socket
     sFd = socket(AF_INET, SOCK_STREAM, 0);
     if (sFd < 0) {
-        perror("socket");
-        exit(1);
+    perror("socket");
+    exit(1);
     }
 
     // Construir la dirección
@@ -40,16 +41,16 @@ void email(char *server_address, char *email_destinatari, char *email_remitent, 
     // Conexión
     result = connect(sFd, (struct sockaddr *)&serverAddr, sockAddrSize);
     if (result < 0) {
-        perror("connect");
-        exit(1);
+    perror("connect");
+    exit(1);
     }
 
     // Presentación servidor
     memset(BufRead, 0, REPLY_MSG_SIZE);
     result = read(sFd, BufRead, REPLY_MSG_SIZE);
     if (result < 0) {
-        perror("read presentación");
-        exit(1);
+    perror("read presentación");
+    exit(1);
     }
     printf("Rebut (%d): -> %s\n", result, BufRead);
 
@@ -58,8 +59,8 @@ void email(char *server_address, char *email_destinatari, char *email_remitent, 
     sprintf(BufWrite, "HELO yourdomain.com\n");
     result = write(sFd, BufWrite, strlen(BufWrite));
     if (result < 0) {
-        perror("write");
-        exit(1);
+    perror("write");
+    exit(1);
     }
 
     memset(BufRead, 0, REPLY_MSG_SIZE);

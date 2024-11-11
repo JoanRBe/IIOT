@@ -56,7 +56,8 @@ int main(int argc, char *argv[])
 
 	if (rc != SQLITE_OK) {
 		fprintf(stderr, "SQL error: %s\n", zErrMsg);
-		sqlite3_free(zErrMsg);}
+		sqlite3_free(zErrMsg);
+		}
 
 /*Creating the report*/
 
@@ -68,7 +69,7 @@ int main(int argc, char *argv[])
 			fclose(file);
 			fprintf(stdout, "Report generated successfully\n");
 			}
-		else{
+		else {
 			perror("Arxiu amb text");
 			exit(EXIT_FAILURE);
 			}
