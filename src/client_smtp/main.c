@@ -83,12 +83,13 @@ int main (int argc, char *argv[])
     }
 
     else {
-		
+
 	FILE *file = fopen(text, "r");
 		if (file == NULL) {
 			perror("No s'ha pogut accedir a l'arxiu");
-			exit(EXIT_FAILURE);}
-		
+			exit(EXIT_FAILURE);
+			}
+
 		memset(text, 0, 256);
 		fread(text, sizeof(char), 256, file);
 		fclose(file);
@@ -107,7 +108,7 @@ int main (int argc, char *argv[])
 	printf("Assumpte: %s\n", assumpte);
 	*/
 	printf("Text: %s\n", text);
-	
+
 
 	/*Crear el socket*/
 	sFd = socket(AF_INET, SOCK_STREAM, 0);

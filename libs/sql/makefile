@@ -4,6 +4,7 @@ CFLAGS=-c -Wall
 all: sql
 
 	./sql
+	doxygen Doxyfile
 
 sql: sql.o
 
@@ -11,7 +12,7 @@ sql: sql.o
 
 	g++ sql.c -l sqlite3
 
-	touch informe.txt
+	touch report.txt
 
 sql.o: sql.c
 
@@ -22,4 +23,6 @@ clean:
 	rm a.out
 	rm sql
 	rm sql.o
-	rm informe.txt
+	rm -rf html/
+	rm -rf latex/
+	rm report.txt
