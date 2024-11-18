@@ -2,8 +2,6 @@ CC=gcc
 
 all: client_smtp
 
-	./build/client_smtp --servidor "172.20.0.21" --usuari "1457962" --remitent 1457962@campus.euss.org --destinatari 1457962@campus.euss.org --assumpte "Mail de prova" --text /home/pi/Desktop/IIOT/src/client_smtp/textemail.txt
-
 help:
 	@echo "Objectius possibles:\n"
 	@echo "  * help   :Aquesta ajuda"
@@ -27,3 +25,7 @@ build/client_smtp: build src/client_smtp/main.c
 
 clean:
 	rm -rf build/
+
+make test:
+
+		./build/client_smtp --servidor "172.20.0.21" --usuari "1457962" --remitent 1457962@campus.euss.org --destinatari 1457962@campus.euss.org --assumpte "Mail de prova" --text /home/pi/Desktop/IIOT/src/client_smtp/textemail.txt

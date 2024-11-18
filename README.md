@@ -15,7 +15,8 @@ Executa **make help** per saber opcions
 .
 ├── src
 │   ├── client_smtp
-│   ├── informe
+│   ├── sensor
+├── libs
 ├── doc
 
 Hi ha directori 'src' on dins hi ha diversos subdirectoris (un per cada programa: 'client_smtp','informe',...)
