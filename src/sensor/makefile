@@ -28,6 +28,14 @@ aht20.o: aht20.c
 
 	$(CC) -c aht20.c -o aht20.o
 
+aht20test: aht20test.o 
+
+	$(CC) -o aht20test aht20test.o $(LIBS)
+
+aht20test.o: aht20test.c
+
+	$(CC) -c aht20test.c -o aht20test.o
+
 clean:
 
-	rm -f *.o sensors lm35 aht20
+	rm -f *.o sensors lm35 aht20 aht20test
