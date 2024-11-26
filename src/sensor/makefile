@@ -1,11 +1,12 @@
 CC=gcc
+LIBS= -lwiringPi -lm
 
 
 all: sensors lm35 aht20
 
 sensors: sensors.o 
 
-	$(CC) sensors -o sensors.o
+	$(CC) -o sensors sensors.o $(LIBS)
 
 sensors.o: sensors.c
 
@@ -13,7 +14,7 @@ sensors.o: sensors.c
 
 lm35: lm35.o 
 
-	$(CC) lm35 -o lm35.o
+	$(CC) -o lm35 lm35.o $(LIBS)
 
 lm35.o: lm35.c
 
@@ -21,7 +22,7 @@ lm35.o: lm35.c
 
 aht20: aht20.o 
 
-	$(CC) aht20 -o aht20.o
+	$(CC) -o aht20 aht20.o $(LIBS)
 
 aht20.o: aht20.c
 
@@ -29,6 +30,4 @@ aht20.o: aht20.c
 
 clean:
 
-	rm -rf *o sensors
-	rm -rf *o lm35
-	rm -rf *o aht20
+	rm -f *.o sensors lm35 aht20
