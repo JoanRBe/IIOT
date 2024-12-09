@@ -20,6 +20,22 @@ lm35.o: lm35.c
 
 	$(CC) -c lm35.c -o lm35.o 
 
+led: led.o 
+
+	$(CC) -o led led.o $(LIBS)
+
+led.o: led.c
+
+	$(CC) -c led.c -o led.o 
+
+ledtest: ledtest.o 
+
+	$(CC) -o ledtest ledtest.o $(LIBS)
+
+ledtest.o: ledtest.c
+
+	$(CC) -c ledtest.c -o ledtest.o 
+
 aht20: aht20.o 
 
 	$(CC) -o aht20 aht20.o $(LIBS)
@@ -28,14 +44,6 @@ aht20.o: aht20.c
 
 	$(CC) -c aht20.c -o aht20.o
 
-aht20test: aht20test.o 
-
-	$(CC) -o aht20test aht20test.o $(LIBS)
-
-aht20test.o: aht20test.c
-
-	$(CC) -c aht20test.c -o aht20test.o
-
 clean:
 
-	rm -f *.o sensors lm35 aht20 aht20test
+	rm -f *.o sensors lm35 aht20 led ledtest

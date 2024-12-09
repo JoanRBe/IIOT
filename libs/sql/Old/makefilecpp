@@ -1,0 +1,25 @@
+CC=gcc -lstdc++
+CFLAGS=-c -Wall
+
+all: sql
+
+	./sql
+	doxygen Doxyfile
+
+sql: sql.o
+
+	arm-linux-gnueabihf-gcc++ sql.cpp -o sql -L. -lsqlite3 -I/usr/include -lstdc++
+
+	arm-linux-gnueabihf-gcc++ sql.cpp -lsqlite3
+
+sql.o: sql.cpp
+
+	$(CC) $(CFLAGS) sql.cpp
+
+clean:
+
+	rm a.out
+	rm sql
+	rm sql.o
+	rm -rf html/
+	rm -rf latex/

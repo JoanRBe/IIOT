@@ -6,59 +6,79 @@
 #include <time.h>
 
 // Dirección I2C del AHT20
-#define AHT20_ADDRESS 0x38
+#define AHT20_I2C_ADDRESS 0x38
 
 // Comandos del AHT20
-#define AHT20_CMD_INITIALIZE 0xBE
-#define AHT20_CMD_TRIGGER 0xAC
-#define AHT20_CMD_SOFT_RESET 0xBA
+#define CMD_INITIALIZE 0xBE
+#define CMD_TRIGGER_MEASURE 0xAC
+#define CMD_SOFT_RESET 0xBA
 
-// Función para inicializar el sensor AHT20
-void aht20_init(int fd) {
-    wiringPiI2CWrite(fd, AHT20_CMD_SOFT_RESET);  // Reiniciar el sensor
-    usleep(20000);  // Esperar 20 ms
-    wiringPiI2CWrite(fd, AHT20_CMD_INITIALIZE);  // Inicializar
-    usleep(300000);  // Esperar 300 ms para inicialización completa
+/**
+ * @brief Inicializa el sensor AHT20.
+ * 
+ * @param fd Descriptor de archivo del dispositivo I2C.
+ * @return int Devuelve 0 si la inicialización es exitosa, -1 en caso de error.
+ */
+ 
+int aht20_init(int fd) {
+    // Enviar comando de inicialización
+    if (wiringPiI2CWrite(fd, CMD_INITIALIZE) != 0) {
+        perror("Error al inicializar el AHT20");
+        return -1;
+    }
+    // Esperar a que el sensor esté listo
+    usleep(150000); // 150 ms
+    return 0;
 }
 
-// Función para leer los valores de temperatura y humedad del AHT20
-int sensor_AHT20(float *temperatura, float *humedad) {
-    uint8_t data[6];
+/**
+ * @brief Lee temperatura y humedad del AHT20.
+ * 
+ * @param fd: Descriptor de archivo del dispositivo I2C.
+ * @param humidity: Variable para almacenar la humedad relativa.
+ * @param temperature: Variable para almacenar la temperatura.
+ * @return int: Devuelve 0 si la lectura es exitosa, -1 en caso de error.
+ */
+ 
+int aht20_read(int fd, float *humidity, float *temperature) {
+    unsigned char cmd[3] = {CMD_TRIGGER_MEASURE, 0x33, 0x00};
+    unsigned char data[6] = {0};
 
-    // Dirección del sensor
-    int fd = wiringPiI2CSetup(AHT20_ADDRESS);
-    if (fd == -1) {
-        printf("Error: No se puede acceder al sensor AHT20.\n");
+    // Enviar comando de medición
+    if (write(fd, cmd, 3) != 3) {
+        perror("Error al enviar comando de medición");
         return -1;
     }
 
-    // Enviar comando para iniciar la medición
-    wiringPiI2CWrite(fd, AHT20_CMD_TRIGGER);
-    usleep(80000);  // Esperar 80 ms para la conversión
+    // Esperar a que los datos estén disponibles (85 ms)
+    usleep(85000);
 
-    // Leer 6 bytes de datos desde el AHT20
-    for (int i = 0; i < 6; i++) {
-        data[i] = wiringPiI2CRead(fd);
+    // Leer los 6 bytes de datos
+    if (read(fd, data, 6) != 6) {
+        perror("Error al leer datos del AHT20");
+        return -1;
     }
 
-    // Verificar si los datos están listos
+    // Verificar bit de estado
     if ((data[0] & 0x80) != 0) {
-        return -1;  // Error, los datos no están listos
+        fprintf(stderr, "El sensor no está listo\n");
+        return -1;
     }
 
     // Calcular humedad (20 bits)
-    uint32_t raw_humidity = ((data[1] << 16) | (data[2] << 8) | data[3]) >> 4;
-    *humedad = (raw_humidity * 100.0) / 1048576.0;
+    unsigned int raw_humidity = ((data[1] << 12) | (data[2] << 4) | (data[3] >> 4));
+    *humidity = (raw_humidity / 1048576.0) * 100.0;
 
     // Calcular temperatura (20 bits)
-    uint32_t raw_temperature = ((data[3] & 0x0F) << 16) | (data[4] << 8) | data[5];
-    *temperatura = (raw_temperature * 200.0) / 1048576.0 - 50.0;
+    unsigned int raw_temperature = ((data[3] & 0x0F) << 16) | (data[4] << 8) | data[5];
+    *temperature = ((raw_temperature / 1048576.0) * 200.0) - 50.0;
 
-    return 0;  // Éxito
+    return 0;
 }
 
 int main(int argc, char *argv[]) {
-    // Comprobar si el usuario ha introducido el intervalo en segundos
+    
+        // Comprobar si el usuario ha introducido el intervalo en segundos
     if (argc != 2) {
         printf("Uso: %s <intervalo_en_segundos>\n", argv[0]);
         return 1;
@@ -70,28 +90,32 @@ int main(int argc, char *argv[]) {
         printf("Error: El intervalo debe ser un número positivo.\n");
         return 1;
     }
+    int fd;
+    float temperature, humidity = 0;
 
-    // Variables para almacenar los valores leídos del sensor
-    float temperatura = 0.0;
-    float humedad = 0.0;
+    // Inicializar conexión I2C
+    fd = wiringPiI2CSetup(AHT20_I2C_ADDRESS);
+    if (fd < 0) {
+        perror("Error al abrir el bus I2C");
+        return -1;
+    }
 
-    // Bucle infinito para leer el sensor periódicamente
+    // Inicializar el AHT20
+    if (aht20_init(fd) < 0) {
+        return -1;
+    }
+
+    // Leer y mostrar valores de temperatura y humedad
     while (1) {
-        // Llamar a la función que lee el sensor
-        if (sensor_AHT20(&temperatura, &humedad) == 0) {
-            // Mostrar los valores leídos
-            time_t now = time(NULL);
-            struct tm *t = localtime(&now);
-            printf("%02d:%02d:%02d - Temperatura: %.2f°C, Humedad: %.2f%%\n", 
-                   t->tm_hour, t->tm_min, t->tm_sec, temperatura, humedad);
+        if (aht20_read(fd, &humidity, &temperature) == 0) {
+            printf("Temperatura: %f ºC\nHumedad: %f %% \n", temperature, humidity);
         } else {
-            printf("Error al leer el sensor AHT20.\n");
+            printf("Error al leer datos del AHT20\n");
         }
-
-        // Esperar el intervalo antes de la siguiente lectura
-        sleep(intervalo);
+        sleep(1); // Leer cada 2 segundos
     }
 
     return 0;
 }
+
 
