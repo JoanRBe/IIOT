@@ -31,6 +31,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
+#include "http.h"
 
 // @help: Compilar 
 //    * https: 'gcc -DVULL_HTTPS main_client_ssl.c -lssl -lcrypto -o https'
@@ -92,7 +93,7 @@ SSL * init_SSL(int fd, SSL_CTX *ctx)
 *
 */
 
-int main(int argc, char *argv[]){
+void http(int argc, char *argv[]){
 	struct sockaddr_in	serverAddr;
 	char	    serverName[] = "192.168.11.249"; //Adreça IP on està iotlab.euss.cat
 	int			sockAddrSize;
@@ -167,5 +168,5 @@ int main(int argc, char *argv[]){
 	/*Tancar el socket*/
 	close(sFd);
 
-	return 0;
+	return;
 	}

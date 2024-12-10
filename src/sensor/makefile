@@ -1,12 +1,14 @@
 CC=gcc
 LIBS= -lwiringPi -lm
+LIBRARY = libhttp.so
+CFLAGS = -Wall -fPIC
+LDFLAGS = -shared
 
+all: sensors
 
-all: sensors lm35 aht20
+sensors: sensors.o $(LIBRARY)
 
-sensors: sensors.o 
-
-	$(CC) -o sensors sensors.o $(LIBS)
+	$(CC) -o sensors sensors.o $(LIBS) -L. -lhttp
 
 sensors.o: sensors.c
 
@@ -28,14 +30,6 @@ led.o: led.c
 
 	$(CC) -c led.c -o led.o 
 
-ledtest: ledtest.o 
-
-	$(CC) -o ledtest ledtest.o $(LIBS)
-
-ledtest.o: ledtest.c
-
-	$(CC) -c ledtest.c -o ledtest.o 
-
 aht20: aht20.o 
 
 	$(CC) -o aht20 aht20.o $(LIBS)
@@ -44,6 +38,14 @@ aht20.o: aht20.c
 
 	$(CC) -c aht20.c -o aht20.o
 
+$(LIBRARY): http.o
+
+	$(CC) $(LDFLAGS) -o $(LIBRARY) http.o
+
+http.o: http.c
+
+	$(CC) $(CFLAGS) -c http.c -o http.o
+
 clean:
 
-	rm -f *.o sensors lm35 aht20 led ledtest
+	rm -f *.o sensors lm35 aht20 led 
