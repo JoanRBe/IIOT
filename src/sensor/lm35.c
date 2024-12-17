@@ -27,7 +27,7 @@ static void pabort(const char *s)
 static void spiadc_config_tx(int conf, uint8_t tx[2])
 {
 	tx[0] = 0x01; // Configuración del canal
-	tx[1] = (conf & 0x07);      // Espacio para los datos del ADC
+	tx[1] = (conf & 0x07); // Espacio para los datos del ADC
 }
 
 // -----------------------------------------------------------------------------------------------

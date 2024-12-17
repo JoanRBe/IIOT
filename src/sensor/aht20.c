@@ -40,7 +40,7 @@ int aht20_init(int fd) {
  * @return int: Devuelve 0 si la lectura es exitosa, -1 en caso de error.
  */
  
-int aht20_read(int fd, float *humidity, float *temperature) {
+int aht20_read(int fd, float *humidity) {
     unsigned char cmd[3] = {CMD_TRIGGER_MEASURE, 0x33, 0x00};
     unsigned char data[6] = {0};
 
@@ -70,8 +70,8 @@ int aht20_read(int fd, float *humidity, float *temperature) {
     *humidity = (raw_humidity / 1048576.0) * 100.0;
 
     // Calcular temperatura (20 bits)
-    unsigned int raw_temperature = ((data[3] & 0x0F) << 16) | (data[4] << 8) | data[5];
-    *temperature = ((raw_temperature / 1048576.0) * 200.0) - 50.0;
+    //unsigned int raw_temperature = ((data[3] & 0x0F) << 16) | (data[4] << 8) | data[5];
+    //*temperature = ((raw_temperature / 1048576.0) * 200.0) - 50.0;
 
     return 0;
 }
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     int fd;
-    float temperature, humidity = 0;
+    float humidity = 0;
 
     // Inicializar conexión I2C
     fd = wiringPiI2CSetup(AHT20_I2C_ADDRESS);
@@ -107,8 +107,8 @@ int main(int argc, char *argv[]) {
 
     // Leer y mostrar valores de temperatura y humedad
     while (1) {
-        if (aht20_read(fd, &humidity, &temperature) == 0) {
-            printf("Temperatura: %f ºC\nHumedad: %f %% \n", temperature, humidity);
+        if (aht20_read(fd, &humidity) == 0) {
+            printf("Humedad: %f %% \n", humidity);
         } else {
             printf("Error al leer datos del AHT20\n");
         }

@@ -56,17 +56,27 @@ int main()
 {
 	//sqlite_stmt *pStmt; //Variable usada para iterar los resultados.
 	sqlite3 *db;
+	sqlite3_stmt *stmt = nullptr;
 	char *zErrMsg = 0;
 	int rc = 0;
-	const char *query;
+	//const char *report;
+	const char *upload;
+	int val1 = 23;
+	int sens_id = 401;
+	
+	/* Bind the values */
+    sqlite3_bind_int(stmt, 1, sens_id);  // Bind sens_id to the first placeholder
+    sqlite3_bind_int(stmt, 2, val1);    // Bind val1 to the second placeholder
 	
 /* Create SQL Statement */
 
-	query = "SELECT MAX (valor) FROM mesures;" \
+    upload = "INSERT INTO mesures (id_mesura, id_sensor, valor, temps) VALUES (NULL, ?, ?, CURRENT_TIMESTAMP);";
+	
+	/*report = "SELECT MAX (valor) FROM mesures;" \
 			"SELECT MIN (valor) FROM mesures;" \
 			"SELECT AVG (valor) FROM mesures;" \
 			"SELECT MIN (temps) FROM mesures;" \
-			"SELECT MAX (temps) FROM mesures;" ;
+			"SELECT MAX (temps) FROM mesures;" ;*/
 
 /* Open DataBase */
 
@@ -87,7 +97,7 @@ int main()
 
 /* Execute SQL statement */
 
-	rc = sqlite3_exec(db, query, callback, &outputfile, &zErrMsg); //Cambio: (void *)data pot &outputfile
+	rc = sqlite3_exec(db, upload, callback, &outputfile, &zErrMsg); //Cambio: (void *)data pot &outputfile
 	//double sqlite3_column_double(sqlite3_stmt*, int iCol);
 
 	if (rc != SQLITE_OK) {
@@ -96,7 +106,7 @@ int main()
 		sqlite3_close(db);
 		}
 
-	//outputfile.close();
+	outputfile.close();
 	sqlite3_close(db);
 	return 0;
 }

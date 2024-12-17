@@ -9,6 +9,7 @@ all: sensors
 sensors: sensors.o $(LIBRARY)
 
 	$(CC) -o sensors sensors.o $(LIBS) -L. -lhttp
+	
 
 sensors.o: sensors.c
 
@@ -21,6 +22,14 @@ lm35: lm35.o
 lm35.o: lm35.c
 
 	$(CC) -c lm35.c -o lm35.o 
+
+voc-co2: voc-co2.o 
+
+	$(CC) -o voc-co2 voc-co2.o $(LIBS)
+
+voc-co2.o: voc-co2.c
+
+	$(CC) -c voc-co2.c -o voc-co2.o
 
 led: led.o 
 
@@ -46,6 +55,10 @@ http.o: http.c
 
 	$(CC) $(CFLAGS) -c http.c -o http.o
 
+test:
+
+	export LD_LIBRARY_PATH=:.
+	
 clean:
 
-	rm -f *.o sensors lm35 aht20 led 
+	rm -f *.o sensors lm35 aht20 led voc-co2

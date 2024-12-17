@@ -31,7 +31,6 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
-#include "http.h"
 
 // @help: Compilar 
 //    * https: 'gcc -DVULL_HTTPS main_client_ssl.c -lssl -lcrypto -o https'
@@ -93,19 +92,22 @@ SSL * init_SSL(int fd, SSL_CTX *ctx)
 *
 */
 
-void http(int argc, char *argv[]){
-	struct sockaddr_in	serverAddr;
-	char	    serverName[] = "192.168.11.249"; //Adreça IP on està iotlab.euss.cat
-	int			sockAddrSize;
-	int			sFd;
-	int 		result;
-	char		buffer[REQUEST_MSG_SIZE];
-	char		missatge[1024]; //= "GET http://iotlab.euss.cat/cloud/guardar_dades_adaptat.php?id_sensor=%s&valor=%s&temps=\r\n\r\n HTTP/1.1\r\n\r\n";
-	const char		*id_sensor= "401";
-	const char		*valor= "21";
+void http(char *serverName, char *url, char *resposta)
+{
+	struct sockaddr_in serverAddr;
+	//char serverName[] = "192.168.11.249"; //Adreça IP on està iotlab.euss.cat
+	int sockAddrSize;
+	int sFd;
+	int result;
+	char buffer[REQUEST_MSG_SIZE];
+	char missatge[1024]; //= "GET http://iotlab.euss.cat/cloud/guardar_dades_adaptat.php?id_sensor=%s&valor=%s&temps=\r\n\r\n HTTP/1.1\r\n\r\n";
+	//const char *id_sensor= "401";
+	//const char *valor= "21";
 	
-	sprintf(missatge, "GET http://iotlab.euss.cat/cloud/guardar_dades_adaptat.php?id_sensor=%s&valor=%s&temps=\r\n\r\n HTTP/1.1\r\n\r\n", id_sensor, valor);
-
+	printf("obtenint url(%s) \n", url);
+	
+	//sprintf(missatge, "GET http://iotlab.euss.cat/cloud/guardar_dades_adaptat.php?id_sensor=%s&valor=%s&temps=\r\n\r\n HTTP/1.1\r\n\r\n", id_sensor, valor);
+	sprintf(missatge, "GET %s\r\n\r\n HTTP/1.1\r\n\r\n", url);
 	/*Crear el socket*/
 	sFd=socket(AF_INET,SOCK_STREAM,0);
 
@@ -138,13 +140,11 @@ void http(int argc, char *argv[]){
 	}
 #endif
 
-	/*Enviar*/
-	memset(buffer, 0, REQUEST_MSG_SIZE);
-	sprintf(buffer,missatge,id_sensor,valor); //Copiar missatge a buffer
+	/*Enviarv 'missatge'*/
 #ifdef VULL_HTTPS
-	result = SSL_write(ssl, buffer, strlen(buffer));
+	result = SSL_write(ssl, missatge, strlen(missatge));
 #else
-	result = write(sFd, buffer, strlen(buffer));
+	result = write(sFd, missatge, strlen(missatge));
 #endif
 	printf("Missatge enviat a servidor(bytes %d): {%s}\n",	result, buffer);
 
@@ -156,6 +156,9 @@ void http(int argc, char *argv[]){
 	result = read(sFd, buffer, REQUEST_MSG_SIZE);
 #endif
 	printf("Missatge rebut del servidor(bytes %d): {%s}\n",	result, buffer);
+	if(resposta) {
+		strcpy( resposta, buffer );
+	}
 
 #ifdef VULL_HTTPS
 	memset(buffer, 0, REQUEST_MSG_SIZE);
