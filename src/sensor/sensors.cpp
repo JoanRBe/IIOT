@@ -16,25 +16,25 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "sql.cpp"
 
-// ----------------------------------------
-// Configuración para AHT20
-// ----------------------------------------
+//Configuración para AHT20
 
 #define AHT20_I2C_ADDRESS 0x38
 #define CMD_INITIALIZE 0xBE
 #define CMD_TRIGGER_MEASURE 0xAC
 #define CMD_SOFT_RESET 0xBA
 
-const char *id_sensor = "0";
-float val_sens = 0;
+const char *server = "198.168.11.249";
+
+//Función de inicialización y lectura de datos para el AHT20
 
 int aht20_init(int fd) {
     if (wiringPiI2CWrite(fd, CMD_INITIALIZE) != 0) {
         perror("Error al inicializar el AHT20");
         return -1;
     }
-    usleep(150000); // Esperar 150 ms
+    usleep(150000);
     return 0;
 }
 
@@ -46,7 +46,7 @@ int aht20_read(int fd, float *humidity) {
         perror("Error al enviar comando de medición");
         return -1;
     }
-    usleep(85000); // Esperar 85 ms
+    usleep(85000);
 
     if (read(fd, data, 6) != 6) {
         perror("Error al leer datos del AHT20");
@@ -61,18 +61,15 @@ int aht20_read(int fd, float *humidity) {
     unsigned int raw_humidity = ((data[1] << 12) | (data[2] << 4) | (data[3] >> 4));
     *humidity = (raw_humidity / 1048576.0) * 100.0;
 
-    //unsigned int raw_temperature = ((data[3] & 0x0F) << 16) | (data[4] << 8) | data[5];
-    //*temperature = ((raw_temperature / 1048576.0) * 200.0) - 50.0;
-
     return 0;
 }
 
-// ----------------------------------------
-// Configuración para LM35
-// ----------------------------------------
+//Configuración para LM35
 
 #define SINGLE_ENDED_CH0 0
-static char *cntdevice = "/dev/spidev0.0";
+const char *cntdevice = "/dev/spidev0.0";
+
+//Configuración SPI
 
 static void pabort(const char *s) {
     perror(s);
@@ -87,12 +84,13 @@ static void spiadc_config_tx(int conf, uint8_t tx[2]) {
 static int spiadc_transfer(int fd, uint8_t bits, uint32_t speed, uint16_t delay, uint8_t tx[2], uint8_t *rx, int len) {
     int ret, value;
     struct spi_ioc_transfer tr = {
-        .tx_buf = (unsigned long)tx,
-        .rx_buf = (unsigned long)rx,
-        .len = len * sizeof(uint8_t),
-        .delay_usecs = delay,
-        .speed_hz = speed,
-        .bits_per_word = bits,
+        .tx_buf = (unsigned long)tx,        
+        .rx_buf = (unsigned long)rx,        
+        .len = len * sizeof(uint8_t),       
+        .speed_hz = speed,                  
+        .delay_usecs = delay,               
+        .bits_per_word = bits,              
+        .cs_change = 0                      
     };
 
     ret = ioctl(fd, SPI_IOC_MESSAGE(1), &tr);
@@ -129,14 +127,10 @@ static int spiadc_config_transfer(int conf, int *value) {
     return ret;
 }
 
-// ----------------------------------------
-// Programa Principal
-// ----------------------------------------
-
 int main(int argc, char *argv[]) {
-    
     char url[1000];
     char resposta[100000];
+    
     if (argc != 2) {
         printf("Uso: %s <intervalo_en_segundos>\n", argv[0]);
         return 1;
@@ -148,7 +142,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Configuración de AHT20
+    //Configuración de AHT20
     int fd_aht20 = wiringPiI2CSetup(AHT20_I2C_ADDRESS);
     if (fd_aht20 < 0) {
         perror("Error al abrir el bus I2C para AHT20");
@@ -159,43 +153,51 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    // Configuración para LM35
+    //Configuración para LM35
     int lm35_value;
     float lm35_volts, lm35_temperature;
     float humidity;
 
     while (1) {
-        // Leer AHT20
+        
+        //Leer AHT20
+        
         if (aht20_read(fd_aht20, &humidity) == 0) {
             printf("AHT20 -> Humedad: %.2f %%\n", humidity);
             
-            //http(char *serverName, char *url, char *resposta);
-            memset( url, 0, 1000 );
-            id_sensor = "402";
-            sprintf(url, "http://iotlab.euss.cat/cloud/"
-            "guardar_dades_adaptat.php?id_sensor=%s&valor=%.2f&temps=", id_sensor, humidity);
-            http("192.168.11.249", url, resposta );
-            val_sens = humidity;
+            memset(url, 0, 1000);
+            const char* id_sensor = "402";  //Asignación del ID del sensor
+            sprintf(url, "http://iotlab.euss.cat/cloud/guardar_dades_adaptat.php?id_sensor=%s&valor=%.2f&temps=", id_sensor, humidity);
+            http(server, url, resposta);
+
+            //Formatear el valor float a char* para pasarlo a sql
             
+            char val_sens[32];  //Definir el buffer adecuado
+            sprintf(val_sens, "%.2f", humidity);
+            sql(id_sensor, val_sens);  //Se pasa como string
+
         } else {
             printf("Error al leer datos del AHT20\n");
         }
 
-        // Leer LM35
+        //Leer LM35
+        
         if (spiadc_config_transfer(SINGLE_ENDED_CH0, &lm35_value) >= 0) {
             lm35_volts = 3.3 * lm35_value / 1023;
             lm35_temperature = lm35_volts * 1000 / 10;
             printf("LM35 -> Temperatura: %.2f ºC\n", lm35_temperature);
             
+            memset(url, 0, 1000);
+            const char* id_sensor = "401";  //Asignación del ID del sensor
+            sprintf(url, "http://iotlab.euss.cat/cloud/guardar_dades_adaptat.php?id_sensor=%s&valor=%.2f&temps=", id_sensor, lm35_temperature);
+            http(server, url, resposta);
+
+            //Formatear el valor float a char* para pasarlo a sql
             
-            //http(char *serverName, char *url, char *resposta);
-            memset( url, 0, 1000 );
-            id_sensor = "401";
-            sprintf(url, "http://iotlab.euss.cat/cloud/"
-            "guardar_dades_adaptat.php?id_sensor=%s&valor=%.2f&temps=", id_sensor, lm35_temperature);
-            http("192.168.11.249", url, resposta );
-            val_sens = lm35_temperature;
-            
+            char val_sens[32];  // Definir el buffer adecuado
+            sprintf(val_sens, "%.2f", lm35_temperature);
+            sql(id_sensor, val_sens);  // Se pasa como string
+
         } else {
             printf("Error al leer datos del LM35\n");
         }
@@ -204,10 +206,8 @@ int main(int argc, char *argv[]) {
     }
 
     return 0;
-    
-	// Llamar a la función para enviar los datos
-	
 }
 
-   
-
+void http(const char* serverName, const char* url, const char* resposta) {
+    //printf("HTTP -> Server: %s, URL: %s\n", serverName, url);
+}

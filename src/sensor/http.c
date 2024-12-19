@@ -92,7 +92,7 @@ SSL * init_SSL(int fd, SSL_CTX *ctx)
 *
 */
 
-void http(char *serverName, char *url, char *resposta)
+void http(const char *serverName, char *url, char *resposta)
 {
 	struct sockaddr_in serverAddr;
 	//char serverName[] = "192.168.11.249"; //Adreça IP on està iotlab.euss.cat

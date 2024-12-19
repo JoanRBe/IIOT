@@ -1,64 +1,43 @@
-CC=gcc
-LIBS= -lwiringPi -lm
+CC = arm-linux-gnueabihf-g++
+LIBS = -lwiringPi -lm
 LIBRARY = libhttp.so
+SQLIB = libsql.so
 CFLAGS = -Wall -fPIC
 LDFLAGS = -shared
+LDFLAGSQL = -L. -lsqlite3 -lstdc++
+CFLAGSQL = -Wall -I/usr/include
 
 all: sensors
 
-sensors: sensors.o $(LIBRARY)
+# El objetivo principal
+sensors: sensors.o $(LIBRARY) $(SQLIB)
+	$(CC) -o sensors sensors.o $(LIBS) -L. -lhttp -L. -lsql -lsqlite3 -lstdc++
 
-	$(CC) -o sensors sensors.o $(LIBS) -L. -lhttp
-	
+# Compilación de sensores.o
+sensors.o: sensors.cpp
+	$(CC) -c sensors.cpp -o sensors.o
 
-sensors.o: sensors.c
-
-	$(CC) -c sensors.c -o sensors.o
-
-lm35: lm35.o 
-
-	$(CC) -o lm35 lm35.o $(LIBS)
-
-lm35.o: lm35.c
-
-	$(CC) -c lm35.c -o lm35.o 
-
-voc-co2: voc-co2.o 
-
-	$(CC) -o voc-co2 voc-co2.o $(LIBS)
-
-voc-co2.o: voc-co2.c
-
-	$(CC) -c voc-co2.c -o voc-co2.o
-
-led: led.o 
-
-	$(CC) -o led led.o $(LIBS)
-
-led.o: led.c
-
-	$(CC) -c led.c -o led.o 
-
-aht20: aht20.o 
-
-	$(CC) -o aht20 aht20.o $(LIBS)
-
-aht20.o: aht20.c
-
-	$(CC) -c aht20.c -o aht20.o
-
+# Compilación de la biblioteca de http
 $(LIBRARY): http.o
-
 	$(CC) $(LDFLAGS) -o $(LIBRARY) http.o
 
+# Compilación de http.o
 http.o: http.c
-
 	$(CC) $(CFLAGS) -c http.c -o http.o
 
-test:
+# Compilación de la biblioteca de SQL
+$(SQLIB): sql.o
+	$(CC) $(LDFLAGSQL) -o $(SQLIB) sql.o
 
-	export LD_LIBRARY_PATH=:.
-	
+# Compilación de sql.o
+sql.o: sql.cpp
+	$(CC) $(CFLAGS) $(CFLAGSQL) -c sql.cpp -o sql.o
+
+# Comando de limpieza
 clean:
+	rm -f *.o sensors lm35 aht20 led voc-co2 sql report.txt
 
-	rm -f *.o sensors lm35 aht20 led voc-co2
+# Ejecutar la aplicación con un intervalo de 5 segundos
+test:
+	export LD_LIBRARY_PATH=.:$$LD_LIBRARY_PATH
+	./sensors 2
