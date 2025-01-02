@@ -27,15 +27,17 @@ http.o: http.c
 
 # Compilación de la biblioteca de SQL
 $(SQLIB): sql.o
-	$(CC) $(LDFLAGSQL) -o $(SQLIB) sql.o
+
+	$(CC) -shared -fPIC -o libsql.so sql.o
 
 # Compilación de sql.o
 sql.o: sql.cpp
-	$(CC) $(CFLAGS) $(CFLAGSQL) -c sql.cpp -o sql.o
+
+	$(CC) -fPIC -c -o sql.o sql.cpp
 
 # Comando de limpieza
 clean:
-	rm -f *.o sensors lm35 aht20 led voc-co2 sql report.txt
+	rm -f *.o sensors lm35 aht20 led voc-co2 report.txt sql
 
 # Ejecutar la aplicación con un intervalo de 5 segundos
 test:

@@ -36,28 +36,28 @@ static int spiadc_transfer(int fd, uint8_t bits, uint32_t speed, uint16_t delay,
 {
     int ret, value;
     struct spi_ioc_transfer tr = {
-        .tx_buf = (unsigned long)tx,
-        .rx_buf = (unsigned long)rx,
-        .len = len * sizeof(uint8_t),  // En este caso, len = 2
-        .delay_usecs = delay,
-        .speed_hz = speed,
-        .bits_per_word = bits,
+	.tx_buf = (unsigned long)tx,
+	.rx_buf = (unsigned long)rx,
+	.len = len * sizeof(uint8_t),  // En este caso, len = 2
+	.delay_usecs = delay,
+	.speed_hz = speed,
+	.bits_per_word = bits,
     };
 
     ret = ioctl(fd, SPI_IOC_MESSAGE(1), &tr);
 
     if (ret < 1)
-        pabort("can't send spi message");
+	pabort("can't send spi message");
 
     // Extraer los bits significativos del ADC (10 bits)
     value = ((rx[0] & 0x1F) << 8) | rx[1]; // Extrae los 10 bits significativos
 
     if (verbose) {
-        printf("SPI RX: ");
-        for (int i = 0; i < len; i++) {
-            printf("0x%02x ", rx[i]);
-        }
-        printf("--> Valor decodificado: %d\n", value);
+	printf("SPI RX: ");
+	for (int i = 0; i < len; i++) {
+		printf("0x%02x ", rx[i]);
+	}
+	printf("--> Valor decodificado: %d\n", value);
     }
 
     return value; // Devuelve el valor decodificado

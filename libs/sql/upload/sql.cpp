@@ -78,7 +78,7 @@ int main() {
         sqlite3_close(db);
         return 1;
     }
-    
+
         const char *CreateTableSQL = "CREATE TABLE IF NOT EXISTS mesures ("
                                  "id_mesura INTEGER PRIMARY KEY AUTOINCREMENT,"
                                  "id_sensor STRING, "

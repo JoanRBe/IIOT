@@ -1,28 +1,27 @@
-CC=gcc
-CFLAGS=-c -Wall
+# Definición del compilador
+CC = arm-linux-gnueabihf-g++
+CFLAGS = -Wall -I/usr/include
+LDFLAGS = -L. -lsqlite3 -lstdc++
 
-all: sql
+# Archivo fuente y nombre del ejecutable
+SRC = sql.cpp
+OUT = sql
 
-	./sql
+# Regla para compilar el programa
+$(OUT): $(SRC)
+	$(CC) $(SRC) -o $(OUT) $(CFLAGS) $(LDFLAGS)
+
+#Regla para ejecución de programa
+
+test: sql
+
+	./sql -I/usr/include -L. -lsqlite3 -lstdc++
 	doxygen Doxyfile
 
-sql: sql.o
-
-	arm-linux-gnueabihf-gcc sql.c -o sql -L. -lsqlite3 -I/usr/include
-
-	g++ sql.c -l sqlite3
-
-	touch report.txt
-
-sql.o: sql.c
-
-	$(CC) $(CFLAGS) sql.c
-
+# Regla para limpiar los archivos generados
 clean:
 
-	rm a.out
 	rm sql
-	rm sql.o
+	rm report.txt
 	rm -rf html/
 	rm -rf latex/
-	rm report.txt

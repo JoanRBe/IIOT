@@ -11,7 +11,8 @@
 
 uint8_t calculate_crc(uint8_t *data, int length);
 
-void VZ89TEReadData(int file, uint8_t request, uint8_t *data) {
+void VZ89TEReadData(int file, uint8_t request, uint8_t *data)
+{
     uint8_t buffer[6];
     uint8_t crc;
 
@@ -30,35 +31,37 @@ void VZ89TEReadData(int file, uint8_t request, uint8_t *data) {
 
     // Enviar el comando al sensor
     if (write(file, buffer, 6) != 6) {
-        perror("Error al enviar comando al sensor");
-        exit(1);
+		perror("Error al enviar comando al sensor");
+		exit(1);
     }
 
     usleep(2000); // Esperar 2 ms
 
     // Solicitar datos del sensor
     if (read(file, data, BUFFER_SIZE) != BUFFER_SIZE) {
-        perror("Error al leer datos del sensor");
-        exit(1);
+		perror("Error al leer datos del sensor");
+		exit(1);
     }
 
     // Verificar CRC de los datos recibidos
     crc = calculate_crc(data, 6);
     if (crc != data[6]) {
-        fprintf(stderr, "Error: CRC inválido. Recibido: 0x%02X, Calculado: 0x%02X\n", data[6], crc);
+		fprintf(stderr, "Error: CRC inválido. Recibido: 0x%02X, Calculado: 0x%02X\n", data[6], crc);
     }
 }
 
-uint8_t calculate_crc(uint8_t *data, int length) {
+uint8_t calculate_crc(uint8_t *data, int length)
+{
     uint8_t crc = 0;
     for (int i = 0; i < length; i++) {
-        crc += data[i];
+		crc += data[i];
     }
     crc = (crc + (crc / 0x100)) & 0xFF; // Reducir a 8 bits
     return 0xFF - crc;
 }
 
-int main() {
+int main(void)
+{
     int file;
     char *i2c_device = "/dev/i2c-1";
     uint8_t data[BUFFER_SIZE];
@@ -66,15 +69,16 @@ int main() {
     uint32_t ResistorValue;
 
     // Abrir el bus I2C
-    if ((file = open(i2c_device, O_RDWR)) < 0) {
-        perror("Error al abrir el bus I2C");
-        return 1;
+    file = open(i2c_device, O_RDWR);
+    if (file < 0) {
+		perror("Error al abrir el bus I2C");
+		return 1;
     }
 
     // Configurar la dirección del sensor
     if (ioctl(file, I2C_SLAVE, I2C_ADDRESS) < 0) {
-        perror("No se pudo conectar con el dispositivo");
-        return 1;
+		perror("No se pudo conectar con el dispositivo");
+		return 1;
     }
 
     // Leer fecha y revisión

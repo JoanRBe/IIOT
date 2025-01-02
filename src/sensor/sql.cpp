@@ -7,7 +7,7 @@
 
 /**
  * @brief Función para insertar datos en la base de datos SQLite.
- * 
+ *
  * @param id_sensor El ID del sensor.
  * @param val_sens El valor del sensor.
  */
@@ -20,7 +20,7 @@ void sql(const char *id_sensor, const char *val_sens) {
     //const char *Timestamp = "CURRENT_TIMESTAMP"; // Asumimos que es un string representando una fecha
 
     //Abrir la base de datos
-    
+
     rc = sqlite3_open("report.db", &db);
     if (rc) {
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
@@ -36,7 +36,7 @@ void sql(const char *id_sensor, const char *val_sens) {
     }
 
     //Crear tabla
-    
+
     const char *CreateTableSQL = "CREATE TABLE IF NOT EXISTS mesures ("
                                  "id_mesura INTEGER PRIMARY KEY AUTOINCREMENT,"
                                  "id_sensor TEXT, "
@@ -52,11 +52,11 @@ void sql(const char *id_sensor, const char *val_sens) {
     }
 
     //Crear declaración SQL
-    
+
     upload = "INSERT INTO mesures (id_sensor, val_sens, Timestamp) VALUES (?, ?, CURRENT_TIMESTAMP);";
 
     //Preparar la declaración
-    
+
     rc = sqlite3_prepare_v2(db, upload, -1, &stmt, 0);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
@@ -65,12 +65,12 @@ void sql(const char *id_sensor, const char *val_sens) {
     }
 
     //Vincular los valores
-    
+
     sqlite3_bind_text(stmt, 2, id_sensor, -1, SQLITE_TRANSIENT);  // Vincula id_sensor al primer marcador de posición
     sqlite3_bind_text(stmt, 1, val_sens, -1, SQLITE_TRANSIENT);   // Vincula val_sens al segundo marcador de posición
 
     //Ejecutar la declaración SQL
-    
+
     rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE) {
         fprintf(stderr, "Execution failed: %s\n", sqlite3_errmsg(db));
@@ -82,11 +82,11 @@ void sql(const char *id_sensor, const char *val_sens) {
     fprintf(stderr, "Data inserted successfully\n");
 
     //Finalizar y limpiar
-    
+
     sqlite3_finalize(stmt);
 
     //Cerrar archivo y base de datos
-    
+
     outputfile.close();
     sqlite3_close(db);
 }

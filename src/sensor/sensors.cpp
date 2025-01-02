@@ -77,20 +77,20 @@ static void pabort(const char *s) {
 }
 
 static void spiadc_config_tx(int conf, uint8_t tx[2]) {
-    tx[0] = 0x01; 
+    tx[0] = 0x01;
     tx[1] = (conf & 0x07);
 }
 
 static int spiadc_transfer(int fd, uint8_t bits, uint32_t speed, uint16_t delay, uint8_t tx[2], uint8_t *rx, int len) {
     int ret, value;
     struct spi_ioc_transfer tr = {
-        .tx_buf = (unsigned long)tx,        
-        .rx_buf = (unsigned long)rx,        
-        .len = len * sizeof(uint8_t),       
-        .speed_hz = speed,                  
-        .delay_usecs = delay,               
-        .bits_per_word = bits,              
-        .cs_change = 0                      
+		.tx_buf = (unsigned long)tx,
+		.rx_buf = (unsigned long)rx,
+		.len = len * sizeof(uint8_t),
+		.speed_hz = speed,
+		.delay_usecs = delay,
+		.bits_per_word = bits,
+		.cs_change = 0
     };
 
     ret = ioctl(fd, SPI_IOC_MESSAGE(1), &tr);
@@ -130,7 +130,6 @@ static int spiadc_config_transfer(int conf, int *value) {
 int main(int argc, char *argv[]) {
     char url[1000];
     char resposta[100000];
-    
     if (argc != 2) {
         printf("Uso: %s <intervalo_en_segundos>\n", argv[0]);
         return 1;
@@ -159,19 +158,18 @@ int main(int argc, char *argv[]) {
     float humidity;
 
     while (1) {
-        
+
         //Leer AHT20
-        
+
         if (aht20_read(fd_aht20, &humidity) == 0) {
             printf("AHT20 -> Humedad: %.2f %%\n", humidity);
-            
             memset(url, 0, 1000);
             const char* id_sensor = "402";  //Asignación del ID del sensor
             sprintf(url, "http://iotlab.euss.cat/cloud/guardar_dades_adaptat.php?id_sensor=%s&valor=%.2f&temps=", id_sensor, humidity);
             http(server, url, resposta);
 
             //Formatear el valor float a char* para pasarlo a sql
-            
+
             char val_sens[32];  //Definir el buffer adecuado
             sprintf(val_sens, "%.2f", humidity);
             sql(id_sensor, val_sens);  //Se pasa como string
@@ -181,19 +179,18 @@ int main(int argc, char *argv[]) {
         }
 
         //Leer LM35
-        
+
         if (spiadc_config_transfer(SINGLE_ENDED_CH0, &lm35_value) >= 0) {
             lm35_volts = 3.3 * lm35_value / 1023;
             lm35_temperature = lm35_volts * 1000 / 10;
             printf("LM35 -> Temperatura: %.2f ºC\n", lm35_temperature);
-            
             memset(url, 0, 1000);
             const char* id_sensor = "401";  //Asignación del ID del sensor
             sprintf(url, "http://iotlab.euss.cat/cloud/guardar_dades_adaptat.php?id_sensor=%s&valor=%.2f&temps=", id_sensor, lm35_temperature);
             http(server, url, resposta);
 
             //Formatear el valor float a char* para pasarlo a sql
-            
+
             char val_sens[32];  // Definir el buffer adecuado
             sprintf(val_sens, "%.2f", lm35_temperature);
             sql(id_sensor, val_sens);  // Se pasa como string
