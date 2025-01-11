@@ -11,9 +11,9 @@ sensors: sensors.o $(LIBRARY)
 	$(CC) -o sensors sensors.o $(LIBS) -L. -lhttp
 	
 
-sensors.o: sensors.c
+sensors.o: sensors.cpp
 
-	$(CC) -c sensors.c -o sensors.o
+	$(CC) -c sensors.cpp -o sensors.o
 	export LD_LIBRARY_PATH=:.
 
 lm35: lm35.o 

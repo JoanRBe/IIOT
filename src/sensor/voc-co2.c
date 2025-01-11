@@ -95,7 +95,9 @@ int main(void)
     VOCvalue = (data[0] - 13) * (1000 / 229);
     CO2value = (data[1] - 13) * (1600 / 229) + 400;
     ResistorValue = 10 * (data[4] + (256 * data[3]) + (65536 * data[2]));
-    printf("VOC: %d ppb, CO2: %d ppm, Resistor: %d ohm\n", VOCvalue, CO2value, ResistorValue);
+    printf("VOC: %d ppb\n", VOCvalue);
+    printf("CO2: %d ppm\n", CO2value);
+    printf("Resistor: %d ohm\n", ResistorValue);
 
     // Cerrar el archivo I2C
     close(file);

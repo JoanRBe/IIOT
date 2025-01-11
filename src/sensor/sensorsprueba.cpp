@@ -7,30 +7,21 @@
 #include <sys/ioctl.h>
 #include <linux/types.h>
 #include <linux/spi/spidev.h>
+#include <linux/i2c-dev.h>
 #include <time.h>
 #include "http.h"
 #include <string.h>
-#include <string>
-#include "sql.h"
 #include <sqlite3.h>
-#include <iconv.h>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include "sql.cpp"
-#include "http.cpp"
-#include <thread>
+#include "sql.h"
+
 
 //Configuración para AHT20
-
 #define AHT20_I2C_ADDRESS 0x38
 #define CMD_INITIALIZE 0xBE
 #define CMD_TRIGGER_MEASURE 0xAC
 #define CMD_SOFT_RESET 0xBA
 
-
 //Función de inicialización y lectura de datos para el AHT20
-
 int aht20_init(int fd) {
     if (wiringPiI2CWrite(fd, CMD_INITIALIZE) != 0) {
         perror("Error al inicializar el AHT20");
@@ -67,12 +58,10 @@ int aht20_read(int fd, float *humidity) {
 }
 
 //Configuración para LM35
-
 #define SINGLE_ENDED_CH0 0
 const char *cntdevice = "/dev/spidev0.0";
 
 //Configuración SPI
-
 static void pabort(const char *s) {
     perror(s);
     abort();
@@ -86,13 +75,13 @@ static void spiadc_config_tx(int conf, uint8_t tx[2]) {
 static int spiadc_transfer(int fd, uint8_t bits, uint32_t speed, uint16_t delay, uint8_t tx[2], uint8_t *rx, int len) {
     int ret, value;
     struct spi_ioc_transfer tr = {
-		.tx_buf = (unsigned long)tx,
-		.rx_buf = (unsigned long)rx,
-		.len = len * sizeof(uint8_t),
-		.speed_hz = speed,
-		.delay_usecs = delay,
-		.bits_per_word = bits,
-		.cs_change = 0
+        .tx_buf = (unsigned long)tx,
+        .rx_buf = (unsigned long)rx,
+        .len = len * sizeof(uint8_t),
+        .speed_hz = speed,
+        .delay_usecs = delay,
+        .bits_per_word = bits,
+        .cs_change = 0
     };
 
     ret = ioctl(fd, SPI_IOC_MESSAGE(1), &tr);
@@ -129,6 +118,55 @@ static int spiadc_config_transfer(int conf, int *value) {
     return ret;
 }
 
+//Configuración para VZ89TE (VOC y CO2)
+#define I2C_ADDRESS 0x70
+#define BUFFER_SIZE 7
+uint8_t calculate_crc(uint8_t *data, int length);
+
+void VZ89TEReadData(int file, uint8_t request, uint8_t *data) {
+    uint8_t buffer[6];
+    uint8_t crc;
+
+    // Calcular CRC
+    crc = request;
+    crc = (crc + (crc / 0x100)) & 0xFF;
+    crc = 0xFF - crc;
+
+    buffer[0] = request;
+    buffer[1] = 0;
+    buffer[2] = 0;
+    buffer[3] = 0;
+    buffer[4] = 0;
+    buffer[5] = crc;
+
+    if (write(file, buffer, 6) != 6) {
+        perror("Error al enviar comando al sensor");
+        exit(1);
+    }
+
+    usleep(2000);
+
+    if (read(file, data, BUFFER_SIZE) != BUFFER_SIZE) {
+        perror("Error al leer datos del sensor");
+        exit(1);
+    }
+
+    crc = calculate_crc(data, 6);
+    if (crc != data[6]) {
+        fprintf(stderr, "Error: CRC inválido.\n");
+    }
+}
+
+uint8_t calculate_crc(uint8_t *data, int length) {
+    uint8_t crc = 0;
+    for (int i = 0; i < length; i++) {
+        crc += data[i];
+    }
+    crc = (crc + (crc / 0x100)) & 0xFF;
+    return 0xFF - crc;
+}
+
+//Función principal
 int main(int argc, char *argv[]) {
     char url[1000];
     char resposta[100000];
@@ -154,57 +192,83 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    //Configuración para LM35
+    //Configuración de SPI para LM35
     int lm35_value;
     float lm35_volts, lm35_temperature;
     float humidity;
 
+    //Configuración de I2C para VOC y CO2
+    int file;
+    uint8_t data[BUFFER_SIZE];
+    uint16_t VOCvalue, CO2value, R0Value;
+    uint32_t ResistorValue;
+    file = open("/dev/i2c-1", O_RDWR);
+    if (file < 0) {
+        perror("Error al abrir el bus I2C");
+        return 1;
+    }
+    if (ioctl(file, I2C_SLAVE, I2C_ADDRESS) < 0) {
+        perror("No se pudo conectar con el dispositivo");
+        return 1;
+    }
+
     while (1) {
-
         //Leer AHT20
-
         if (aht20_read(fd_aht20, &humidity) == 0) {
             printf("AHT20 -> Humedad: %.2f %%\n", humidity);
             memset(url, 0, 1000);
             const char* id_sensor = "402";  //Asignación del ID del sensor
             sprintf(url, "http://iotlab.euss.cat/cloud/guardar_dades_adaptat.php?id_sensor=%s&valor=%.2f&temps=", id_sensor, humidity);
-            http(server, url, resposta);
-            //Formatear el valor float a char* para pasarlo a sql
-
-            char val_sens[32];  //Definir el buffer adecuado
+            http("192.168.11.249", url, resposta);
+            char val_sens[32];  
             sprintf(val_sens, "%.2f", humidity);
-            sql(id_sensor, val_sens); //Se pasa como string
-
+            sql(id_sensor, val_sens);
         } else {
             printf("Error al leer datos del AHT20\n");
         }
 
         //Leer LM35
-
         if (spiadc_config_transfer(SINGLE_ENDED_CH0, &lm35_value) >= 0) {
             lm35_volts = 3.3 * lm35_value / 1023;
             lm35_temperature = lm35_volts * 1000 / 10;
             printf("LM35 -> Temperatura: %.2f ºC\n", lm35_temperature);
             memset(url, 0, 1000);
-            const char* id_sensor = "401";  //Asignación del ID del sensor
+            const char* id_sensor = "401";  
             sprintf(url, "http://iotlab.euss.cat/cloud/guardar_dades_adaptat.php?id_sensor=%s&valor=%.2f&temps=", id_sensor, lm35_temperature);
-            http(server, url, resposta);
-            //Formatear el valor float a char* para pasarlo a sql
-
-            char val_sens[32];  // Definir el buffer adecuado
+            http("192.168.11.249", url, resposta);
+            char val_sens[32];
             sprintf(val_sens, "%.2f", lm35_temperature);
-            sql(id_sensor, val_sens);  // Se pasa como string
-
+            sql(id_sensor, val_sens);
         } else {
             printf("Error al leer datos del LM35\n");
         }
 
+        //Leer VOC y CO2
+        VZ89TEReadData(file, 0x0C, data);
+        VOCvalue = (data[0] - 13) * (1000 / 229);
+        CO2value = (data[1] - 13) * (1600 / 229) + 400;
+        ResistorValue = 10 * (data[4] + (256 * data[3]) + (65536 * data[2]));
+        printf("VOC: %d ppb, CO2: %d ppm\n", VOCvalue, CO2value);
+        
+        memset(url, 0, 1000);
+        const char* id_sensor = "403";  // Asignación del ID para VOC
+        sprintf(url, "http://iotlab.euss.cat/cloud/guardar_dades_adaptat.php?id_sensor=%s&valor=%.2f&temps=", id_sensor, VOCvalue);
+        http("192.168.11.249", url, resposta);
+        char val_sens[32];  
+        sprintf(val_sens, "%.2f", VOCvalue);
+        sql(id_sensor, val_sens);
+
+        memset(url, 0, 1000);
+        const char* id_sensor = "404";  // Asignación del ID para CO2
+        sprintf(url, "http://iotlab.euss.cat/cloud/guardar_dades_adaptat.php?id_sensor=%s&valor=%.2f&temps=", id_sensor, CO2value);
+        http("192.168.11.249", url, resposta);
+        char val_sens[32];  
+        sprintf(val_sens, "%.2f", CO2value);
+        sql(id_sensor, val_sens);
+
         sleep(intervalo);
     }
 
+    close(file);
     return 0;
 }
-
-/*void http(const char* server, char* url, char* resposta) {
-    printf("HTTP -> Server: %s, URL: %s\n", server, url);
-}*/

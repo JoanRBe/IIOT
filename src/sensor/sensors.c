@@ -13,9 +13,9 @@
 #include "sql.h"
 #include <sqlite3.h>
 #include <iconv.h>
-#include <iostream>
-#include <fstream>
-#include <string>
+//#include <iostream>
+//#include <fstream>
+//#include <string>
 
 // ----------------------------------------
 // Configuración para AHT20
@@ -154,6 +154,7 @@ int main(int argc, char *argv[])
 		printf("Error: El intervalo debe ser un número positivo.\n");
 		return 1;
 		}
+		
     // Configuración de AHT20
 		int fd_aht20 = wiringPiI2CSetup(AHT20_I2C_ADDRESS);
 		if (fd_aht20 < 0) {

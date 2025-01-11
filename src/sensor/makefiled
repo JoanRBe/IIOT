@@ -1,26 +1,23 @@
 CC = arm-linux-gnueabihf-g++
-LIBS = -lwiringPi -lm -lssl -lcrypto -lsqlite3 -lstdc++
+LIBS = -lwiringPi -lm
 LIBRARY = libhttp.so
 SQLIB = libsql.so
 CFLAGS = -Wall -fPIC
-HTTPS_FLAGS = -DVULL_HTTPS -lssl -lcrypto
 LDFLAGS = -shared
 LDFLAGSQL = -L. -lsqlite3 -lstdc++
 CFLAGSQL = -Wall -I/usr/include
 
-LIBDIR = .
-
 # El objetivo principal
 sensors: sensors.o $(LIBRARY) $(SQLIB)
-	$(CC) $(HTTPS_FLAGS) -o sensors sensors.o $(LIBS) -L. -lhttp -L. -lsql
+	$(CC) -o sensors sensors.o $(LIBS) -L. -lhttp -L. -lsql -lsqlite3 -lstdc++ -lssl -lcrypto
 
 # Compilación de sensors.o
 sensors.o: sensors.cpp
-	$(CC) $(HTTPS_FLAGS) -c sensors.cpp -o sensors.o
+	$(CC) -c sensors.cpp -o sensors.o
 
 # Compilación de la biblioteca de http
 $(LIBRARY): http.o
-	$(CC) -shared -fPIC -o libhttp.so http.o -lssl -lcrypto
+	$(CC) -shared -fPIC -o libhttp.so http.o
 
 # Compilación de http.o
 http.o: http.cpp
@@ -29,7 +26,7 @@ http.o: http.cpp
 # Compilación de la biblioteca de SQL
 $(SQLIB): sql.o
 
-	$(CC) $(LDFLAGSQL) -shared -fPIC -o libsql.so sql.o
+	$(CC) -shared -fPIC -o libsql.so sql.o
 
 # Compilación de sql.o
 sql.o: sql.cpp
