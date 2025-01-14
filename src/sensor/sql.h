@@ -1,6 +1,6 @@
 #ifndef SQL_H
 #define SQL_H
 
-void sql(int argc, char *argv[]);
+void sql(const char *id_sensor, const char *val_sens);
 
 #endif

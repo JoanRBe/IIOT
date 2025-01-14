@@ -17,9 +17,9 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "sql.cpp"
-#include "http.cpp"
 #include <thread>
+#include "mqtt.h"
+#include "vocco2.h"
 
 //Configuración para AHT20
 
@@ -132,6 +132,16 @@ static int spiadc_config_transfer(int conf, int *value) {
 int main(int argc, char *argv[]) {
     char url[1000];
     char resposta[100000];
+    extern const char *server;
+    
+    // Definir VOC y CO2 como std::string
+    std::string VOC;
+    std::string CO2;
+
+    // Definición de las variables adecuadas
+    float lm35_temperature = 0.0;
+    float humidity = 0.0;
+
     if (argc != 2) {
         printf("Uso: %s <intervalo_en_segundos>\n", argv[0]);
         return 1;
@@ -156,13 +166,11 @@ int main(int argc, char *argv[]) {
 
     //Configuración para LM35
     int lm35_value;
-    float lm35_volts, lm35_temperature;
-    float humidity;
+    float lm35_volts;
 
     while (1) {
 
         //Leer AHT20
-
         if (aht20_read(fd_aht20, &humidity) == 0) {
             printf("AHT20 -> Humedad: %.2f %%\n", humidity);
             memset(url, 0, 1000);
@@ -180,7 +188,6 @@ int main(int argc, char *argv[]) {
         }
 
         //Leer LM35
-
         if (spiadc_config_transfer(SINGLE_ENDED_CH0, &lm35_value) >= 0) {
             lm35_volts = 3.3 * lm35_value / 1023;
             lm35_temperature = lm35_volts * 1000 / 10;
@@ -195,16 +202,53 @@ int main(int argc, char *argv[]) {
             sprintf(val_sens, "%.2f", lm35_temperature);
             sql(id_sensor, val_sens);  // Se pasa como string
 
+            
+            
         } else {
             printf("Error al leer datos del LM35\n");
         }
+        
+        // Llamada a vocco2
+        vocco2(VOC, CO2);  // VOC y CO2 ahora son std::string
+        
+        
+        //Leer VOC
+        double voc_value = std::stod(VOC); // Convierte el texto a double
+        printf("VOC -> %f ppb\n", voc_value);
+        memset(url, 0, 1000);
+        const char* id_sensor = "405";  //Asignación del ID del sensor
+        //sprintf(url, "http://iotlab.euss.cat/cloud/guardar_dades_adaptat.php?id_sensor=%s&valor=%s&temps=", id_sensor, VOC);
+        sprintf(url, "http://iotlab.euss.cat/cloud/guardar_dades_adaptat.php?id_sensor=%s&valor=%f&temps=", id_sensor, voc_value);
+        http(server, url, resposta);
+        /*    
+        //Formatear el valor float a char* para pasarlo a sql
+        char val_sens[32];  // Definir el buffer adecuado
+        sprintf(val_sens, "%.2f", VOC);
+        sql(id_sensor, val_sens);  // Se pasa como string
+        
+        
+        // Convertir VOC a un valor numérico
+        double voc_value = std::stod(VOC); // Convierte el texto a double
+
+        // Crear la URL usando sprintf
+        const char* id_sensor = "405";  //Asignación del ID del sensor
+        sprintf(url, "http://iotlab.euss.cat/cloud/guardar_dades_adaptat.php?id_sensor=%s&valor=%f&temps=", id_sensor, voc_value);
+        */
+        
+        //Leer CO2
+        double co2_value = std::stod(CO2); // Convierte el texto a double
+        printf("CO2 -> %f ppm\n", co2_value);
+        memset(url, 0, 1000);
+        //const char* id_sensor = "404";  //Asignación del ID del sensor
+        //sprintf(url, "http://iotlab.euss.cat/cloud/guardar_dades_adaptat.php?id_sensor=%s&valor=%s&temps=", id_sensor, VOC);
+        sprintf(url, "http://iotlab.euss.cat/cloud/guardar_dades_adaptat.php?id_sensor=404&valor=%f&temps=", co2_value);
+        http(server, url, resposta);
+
+        // Llamada a homeassistant
+        homeassistant(lm35_temperature, humidity, VOC.c_str(), CO2.c_str());  // VOC y CO2 convertidos a c_str()
 
         sleep(intervalo);
     }
 
     return 0;
 }
-
-/*void http(const char* server, char* url, char* resposta) {
-    printf("HTTP -> Server: %s, URL: %s\n", server, url);
-}*/

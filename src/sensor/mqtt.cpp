@@ -3,7 +3,13 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <mqtt/callback.h>
+#include "mqtt.h"
 #include <mqtt/async_client.h>  // Ruta estándar de inclusión de la librería MQTT
+
+extern float lm35_temperature;
+extern float humidity;
+extern char VOC[10];
+extern char CO2[10];
 
 // Configuración del cliente MQTT
 const std::string SERVER_ADDRESS("192.168.11.110:1883"); //"tcp://192.168.11.110:8123" Dirección IP de tu Home Assistant MQTT
@@ -34,7 +40,7 @@ public:
     }
 };
 
-int main() {
+void homeassistant(float lm35_temperature, float humidity, const std::string& VOC, const std::string& CO2){
     // Crear un cliente MQTT
     mqtt::async_client client(SERVER_ADDRESS, CLIENT_ID);
     
@@ -56,14 +62,10 @@ int main() {
         // Publicar los datos del sensor cada 10 segundos
         while (true) {
             // Simula la lectura de un sensor (por ejemplo, temperatura aleatoria)
-            float lm35_temperature = 25.0f + (rand() % 100) / 10.0f;  // Temperatura entre 25.0 y 34.9 grados
-            float humidity = 65.0;
-            float voc = 1;
-            float co2 = 15.5;
             std::string payload1 = std::to_string(lm35_temperature); // Convertir el valor a string
             std::string payload2 = std::to_string(humidity);
-            std::string payload3 = std::to_string(voc); 
-            std::string payload4 = std::to_string(co2); 
+            std::string payload3 = VOC;  // VOC es un char[] convertido a string
+            std::string payload4 = CO2; // CO2 es un char[] convertido a string
 
             // Publicar en el tópico MQTT
             std::cout << "Publicando " << payload1 << " en el topico " << TOPICTMP << std::endl;
@@ -78,14 +80,15 @@ int main() {
 
             // Esperar 10 segundos antes de la siguiente publicación
             sleep(10);
-                        // Publicar en el tópico MQTT
+            
+            // Publicar en el tópico MQTT
             std::cout << "Publicando " << payload3 << " en el topico " << TOPICVOC << std::endl;
             client.publish(TOPICVOC, payload3.c_str(), payload3.length(), 0, false);  // QoS=0, no-retained
 
             // Esperar 10 segundos antes de la siguiente publicación
             sleep(10);
             
-                        // Publicar en el tópico MQTT
+            // Publicar en el tópico MQTT
             std::cout << "Publicando " << payload4 << " en el topico " << TOPICCO2 << std::endl;
             client.publish(TOPICCO2, payload4.c_str(), payload4.length(), 0, false);  // QoS=0, no-retained
 
@@ -97,8 +100,8 @@ int main() {
         client.disconnect()->wait();
     } catch (const mqtt::exception& exc) {
         std::cout << "Error: " << exc.what() << std::endl;
-        return 1;
+        return;
     }
 
-    return 0;
+    return;
 }

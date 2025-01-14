@@ -4,6 +4,7 @@
 #include <string.h>
 #include <iostream>
 #include <fstream>
+#include "sql.h"
 
 /**
  * @brief Función para insertar datos en la base de datos SQLite.

@@ -26,12 +26,13 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include "http.h"
 
 #define REQUEST_MSG_SIZE (1024*256)
 #define SERVER_PORT_NUM 80  // Puerto 80 para HTTP
 #define FAIL    -1
 
-const char *server = "192.168.11.249";
+const char* server = "192.168.11.249";
 
 /************************
 *
